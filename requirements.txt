@@ -3,5 +3,5 @@ lmdb
 matplotlib
 numpy
 opencv-python
-path0
+path
 tensorflow

@@ -3,7 +3,7 @@ import sys
 from typing import List, Tuple
 
 import numpy as np
-import tensorflow
+import tensorflow as tf
 
 from dataloader_iam import Batch
 
@@ -129,7 +129,7 @@ class Model:
         # Calculate loss for each element to compute label probability
         self.saved_ctc_input = tf.compat.v1.placeholder(tf.float32,
                                                         shape=[None, None, len(self.char_list) + 1])
-        self.loss_per_element = tf..compat.v1.nn.ctc_loss(labels=self.gt_texts, inputs=self.saved_ctc_input,
+        self.loss_per_element = tf.compat.v1.nn.ctc_loss(labels=self.gt_texts, inputs=self.saved_ctc_input,
                                                           sequence_length=self.seq_len, ctc_merge_repeated=True)
 
         # Decoding selection
@@ -140,7 +140,7 @@ class Model:
         
         # Word beam search decoding
         else:
-            char = ''.join(self.char_list)
+            chars = ''.join(self.char_list)
             word_chars = open('../model/wordCharList.txt').read().splitlines()[0]
             corpus = open('../data/corpus.txt').read()
 
@@ -196,10 +196,10 @@ class Model:
                 shape[1] = len(label_str)
             # Put each label into sparse tensor
             for i, label in enumerate(label_str):
-                indicies.appen([batchElement, i])
+                indices.appen([batchElement, i])
                 values.append(label)
 
-        return indicies, values, shape
+        return indices, values, shape
 
     def decoder_output_to_text(self, ctc_output: tuple, batch_size: int) -> List[str]:
         """
@@ -219,7 +219,7 @@ class Model:
             label_strs = [[] for _ in range(batch_size)]
 
             # Go over all indices and save mapping: Batch -> Values
-            for (idx, idx2d) in enumerate(decoded.indicies):
+            for (idx, idx2d) in enumerate(decoded.indices):
                 label = decoded.values[idx]
                 batch_element = idx2d[0] # Index according to [b,t]
                 label_strs[batch_element].append(label)
@@ -305,7 +305,7 @@ class Model:
             ctc_input = eval_res[1]
             eval_list = self.loss_per_element
             feed_dict = {
-                self.saved_ctc_input: ctc, input, self.gt_texts: sparse,
+                self.saved_ctc_input: ctc_input, self.gt_texts: sparse,
                 self.seq_len: [max_text_len] * num_batch_elements, self.is_train: False
             }
             loss_vals = self.sess.run(eval_list, feed_dict)
